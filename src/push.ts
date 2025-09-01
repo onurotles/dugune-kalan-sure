@@ -19,7 +19,7 @@ export async function subscribeUser() {
     });
 
     // Backend’e gönder
-    await fetch('http://localhost:4000/subscribe', {
+    await fetch('https://countdown-push-server.vercel.app/subscribe', {
       method: 'POST',
       body: JSON.stringify(subscription),
       headers: { 'Content-Type': 'application/json' },
