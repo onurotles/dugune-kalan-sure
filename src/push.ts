@@ -19,11 +19,16 @@ export async function subscribeUser() {
     });
 
     // Backend’e gönder
-    await fetch('http://countdown-push-server.onrender.com/subscribe', {
-      method: 'POST',
-      body: JSON.stringify(subscription),
-      headers: { 'Content-Type': 'application/json' },
-    });
+    try {
+        const res = await fetch('http://countdown-push-server.onrender.com/subscribe', {
+            method: 'POST',
+            body: JSON.stringify(subscription),
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (!res.ok) throw new Error('Subscription failed');
+        } catch(err) {
+        console.error('Push subscription hatası:', err);
+    }
 
     console.log('Push subscription alındı ✅');
   }
