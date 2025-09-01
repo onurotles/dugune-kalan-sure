@@ -19,7 +19,7 @@ export async function subscribeUser() {
     });
 
     // Backend’e gönder
-    await fetch('https://countdown-push-server.vercel.app/subscribe', {
+    await fetch('http://countdown-push-server.onrender.com/subscribe', {
       method: 'POST',
       body: JSON.stringify(subscription),
       headers: { 'Content-Type': 'application/json' },
