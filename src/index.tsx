@@ -10,22 +10,24 @@ const root = ReactDOM.createRoot(
 
 async function initServiceWorker() {
   if ('serviceWorker' in navigator) {
-    // Önce eski SW'leri kaldır
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    for (const reg of registrations) {
-      await reg.unregister();
-    }
-
-    // Şimdi yeni SW'yi register et
     try {
+      // 1️⃣ Mevcut kayıtlı tüm service worker'ları sil
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) {
+        await reg.unregister();
+      }
+      console.log('Previous Service Workers unregistered');
+
+      // 2️⃣ Yeni service worker'ı register et
       const registration = await navigator.serviceWorker.register('/service-worker.js');
-      console.log('Service Worker registered:', registration);
+      console.log('New Service Worker registered:', registration);
     } catch (err) {
       console.error('Service Worker registration failed:', err);
     }
   }
 }
 
+// SW başlat
 initServiceWorker();
 
 root.render(
@@ -34,4 +36,5 @@ root.render(
   </React.StrictMode>
 );
 
+// Performans ölçümü
 reportWebVitals();
