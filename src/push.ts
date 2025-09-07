@@ -20,7 +20,7 @@ export async function subscribeUser() {
 
     // Backend’e gönder
     try {
-        const res = await fetch('http://countdown-push-server.onrender.com/subscribe', {
+        const res = await fetch('https://countdown-push-server.onrender.com/subscribe', {
             method: 'POST',
             body: JSON.stringify(subscription),
             headers: { 'Content-Type': 'application/json' },
