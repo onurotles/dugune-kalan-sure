@@ -8,14 +8,25 @@ const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/service-worker.js")
-      .then((reg) => console.log("Service Worker registered:", reg))
-      .catch((err) => console.error("Service Worker registration failed:", err));
-  });
+async function initServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    // Önce eski SW'leri kaldır
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const reg of registrations) {
+      await reg.unregister();
+    }
+
+    // Şimdi yeni SW'yi register et
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('Service Worker registered:', registration);
+    } catch (err) {
+      console.error('Service Worker registration failed:', err);
+    }
+  }
 }
+
+initServiceWorker();
 
 root.render(
   <React.StrictMode>
@@ -23,7 +34,4 @@ root.render(
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
