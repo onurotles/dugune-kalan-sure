@@ -33,13 +33,92 @@ const Countdown: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  function getBackgroundStyle() {
+  function getBackgroundStyle(): React.CSSProperties {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return { background: "linear-gradient(to bottom, #87ceeb, #f0e68c)" };
-    if (hour >= 12 && hour < 15) return { background: "linear-gradient(to bottom, #00bfff, #ffff66)" };
-    if (hour >= 15 && hour < 18) return { background: "linear-gradient(to bottom, #ffcc66, #ff9966)" };
-    if (hour >= 18 && hour < 21) return { background: "linear-gradient(to bottom, #ff6600, #990000)" };
+
+    if (hour >= 5 && hour < 12) {
+      return { background: "linear-gradient(to top, #f0e68c, #87ceeb)" };
+    }
+    if (hour >= 12 && hour < 15) {
+      return { background: "linear-gradient(to top, #00bfff, #ffff66)" };
+    }
+    if (hour >= 15 && hour < 18) {
+      return {
+        background: "linear-gradient(to top, #3cba54 20%, #87ceeb 80%)",
+        position: "relative",
+      };
+    }
+    if (hour >= 18 && hour < 21) {
+      return { background: "linear-gradient(to top, #ff6600, #990000)" };
+    }
     return { background: "#0a0a2a" };
+  }
+
+  function renderAfternoonScene() {
+    const hour = new Date().getHours();
+    if (hour >= 15 && hour < 18) {
+      return (
+        <>
+          {/* Güneş */}
+          <div
+            style={{
+              position: "absolute",
+              top: "10%",
+              left: "75%",
+              width: "100px",
+              height: "100px",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, #ffeb3b, #fbc02d)",
+              boxShadow: "0 0 50px rgba(255,223,0,0.8)",
+            }}
+          />
+
+          {/* Bulutlar (sadece 2 tane kaldı) */}
+          <div style={{ ...styles.cloud, top: "15%", left: "10%" }} />
+          <div style={{ ...styles.cloud, top: "20%", left: "40%" }} />
+
+          {/* Çimen */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              width: "100%",
+              height: "80px",
+              background: "linear-gradient(to top, #228B22, #32CD32)",
+              borderTopLeftRadius: "50% 20px",
+              borderTopRightRadius: "50% 20px",
+            }}
+          />
+
+          {/* Ağaçlar */}
+          <svg
+            style={{ position: "absolute", bottom: 0, left: "10%", height: "200px" }}
+            viewBox="0 0 100 200"
+          >
+            <rect x="45" y="120" width="10" height="80" fill="#8b4513" />
+            <circle cx="50" cy="100" r="40" fill="#228B22" />
+          </svg>
+
+          <svg
+            style={{ position: "absolute", bottom: 0, left: "30%", height: "150px" }}
+            viewBox="0 0 100 200"
+          >
+            <rect x="45" y="120" width="10" height="80" fill="#8b4513" />
+            <circle cx="50" cy="100" r="35" fill="#2e8b57" />
+          </svg>
+
+          <svg
+            style={{ position: "absolute", bottom: 0, right: "20%", height: "180px" }}
+            viewBox="0 0 100 200"
+          >
+            <rect x="45" y="120" width="10" height="80" fill="#8b4513" />
+            <circle cx="50" cy="100" r="38" fill="#006400" />
+          </svg>
+        </>
+      );
+    }
+    return null;
   }
 
   function renderNightSky() {
@@ -51,6 +130,7 @@ const Countdown: React.FC = () => {
         size: Math.random() * 2 + 1,
         opacity: Math.random() * 0.8 + 0.2,
       }));
+
       return (
         <>
           {stars.map((star, i) => (
@@ -88,6 +168,7 @@ const Countdown: React.FC = () => {
   return (
     <div style={{ ...styles.container, ...getBackgroundStyle() }}>
       {renderNightSky()}
+      {renderAfternoonScene()}
       <div style={styles.content}>
         <h1 style={styles.title}>4 TEMMUZ 2026 GERİ SAYIM</h1>
 
@@ -117,15 +198,77 @@ const Countdown: React.FC = () => {
 export default Countdown;
 
 const styles: { [key: string]: React.CSSProperties } = {
-  container: { width: "100vw", height: "100vh", backgroundSize: "cover", position: "relative", overflow: "hidden", color: "#fff", display: "flex", justifyContent: "center", alignItems: "center" },
-  content: { position: "relative", zIndex: 1, textAlign: "center", maxWidth: "90%" },
-  title: { fontSize: "2.5rem", marginBottom: "0.5rem" },
-  progressContainer: { width: "80%", maxWidth: "600px", backgroundColor: "rgba(255,255,255,0.2)", borderRadius: "10px", overflow: "hidden", margin: "0 auto 2rem" },
-  progressBar: { height: "25px", backgroundColor: "#4cafef", display: "flex", justifyContent: "center", alignItems: "center", transition: "width 0.5s ease" },
-  progressLabel: { fontSize: "0.9rem", color: "#fff", fontWeight: "bold" },
-  timer: { display: "flex", justifyContent: "center", gap: "1.5rem" },
-  timeBox: { textAlign: "center" },
-  number: { fontSize: "2.5rem", fontWeight: "bold" },
-  label: { fontSize: "1rem" },
-  moon: { position: "absolute", top: "10%", left: "80%", width: "80px", height: "80px" },
+  container: {
+    width: "100vw",
+    height: "100vh",
+    backgroundSize: "cover",
+    position: "relative",
+    overflow: "hidden",
+    color: "#fff",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  content: {
+    position: "relative",
+    zIndex: 1,
+    textAlign: "center",
+    maxWidth: "90%",
+  },
+  title: {
+    fontSize: "2.5rem",
+    marginBottom: "0.5rem",
+  },
+  progressContainer: {
+    width: "80%",
+    maxWidth: "600px",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: "10px",
+    overflow: "hidden",
+    margin: "0 auto 2rem",
+  },
+  progressBar: {
+    height: "25px",
+    backgroundColor: "#4cafef",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    transition: "width 0.5s ease",
+  },
+  progressLabel: {
+    fontSize: "0.9rem",
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  timer: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "1.5rem",
+  },
+  timeBox: {
+    textAlign: "center",
+  },
+  number: {
+    fontSize: "2.5rem",
+    fontWeight: "bold",
+  },
+  label: {
+    fontSize: "1rem",
+  },
+  moon: {
+    position: "absolute",
+    top: "10%",
+    left: "80%",
+    width: "80px",
+    height: "80px",
+  },
+  cloud: {
+    position: "absolute",
+    width: "120px",
+    height: "60px",
+    background: "#fff",
+    borderRadius: "60px",
+    boxShadow: "30px 10px 0 0 #fff, 60px 15px 0 0 #fff, 90px 5px 0 0 #fff",
+    opacity: 0.8,
+  },
 };
