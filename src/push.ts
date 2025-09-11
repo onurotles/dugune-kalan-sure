@@ -1,7 +1,5 @@
-// src/push.ts
-const PUBLIC_VAPID_KEY = process.env.REACT_APP_VAPID_PUBLIC || ''; // .env dosyasından alınacak
+const PUBLIC_VAPID_KEY = process.env.REACT_APP_VAPID_PUBLIC || '';
 
-// URL Base64 → Uint8Array dönüşümü
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -9,62 +7,51 @@ function urlBase64ToUint8Array(base64String: string) {
   return new Uint8Array([...rawData].map((c) => c.charCodeAt(0)));
 }
 
-// Push aboneliği alma ve backend’e gönderme
 export async function subscribeUser() {
-  if (!('serviceWorker' in navigator)) {
-    console.warn('Service Worker desteklenmiyor.');
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.warn('Push desteklenmiyor.');
+    return;
+  }
+
+  if (!PUBLIC_VAPID_KEY) {
+    console.error('REACT_APP_VAPID_PUBLIC tanımlı değil!');
     return;
   }
 
   try {
-    const registration = await navigator.serviceWorker.ready;
-    if (!registration) throw new Error('Service Worker hazır değil.');
+    const registration = await navigator.serviceWorker.register('/service-worker.js');
+    await navigator.serviceWorker.ready;
 
-    if (!('PushManager' in window)) {
-      console.warn('Push notifications desteklenmiyor.');
-      return;
-    }
-
-    if (!PUBLIC_VAPID_KEY) throw new Error('REACT_APP_VAPID_PUBLIC tanımlı değil!');
-
-    const applicationServerKey = urlBase64ToUint8Array(PUBLIC_VAPID_KEY);
-
-    let subscription: PushSubscription | null = null;
-
-    // Retry: 5 kez deneyelim
-    for (let i = 0; i < 5; i++) {
-      try {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey,
-        });
-        break;
-      } catch (err: any) {
-        console.warn(`Push subscribe denemesi ${i + 1} başarısız:`, err);
-        await new Promise((r) => setTimeout(r, 2000)); // 2 saniye bekle
-      }
-    }
+    // 🔹 Mevcut aboneliği kontrol et
+    let subscription = await registration.pushManager.getSubscription();
 
     if (!subscription) {
-      console.error('Push aboneliği alınamadı ❌');
-      return;
+      // Yoksa yeni oluştur
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
+      });
+      console.log('Yeni push aboneliği oluşturuldu ✅');
+    } else {
+      console.log('Mevcut push aboneliği bulundu, tekrar kullanılacak ♻️');
     }
 
-    // Backend’e abonelik gönder
-    let res: Response | null = null;
+    const subJson = subscription.toJSON();
+
+    // 🔹 Backend'e kaydet (retry destekli)
     for (let i = 0; i < 5; i++) {
       try {
-        res = await fetch('https://countdown-push-server.onrender.com/subscribe', {
+        const res = await fetch('https://countdown-push-server.onrender.com/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(subscription),
+          body: JSON.stringify(subJson),
         });
 
         if (res.status === 201) {
-          console.log('Push aboneliği kaydedildi ✅');
+          console.log('Push aboneliği backend’e kaydedildi ✅');
           return;
         } else if (res.status === 503) {
-          console.warn('DB henüz hazır değil, tekrar denenecek...');
+          console.warn('DB hazır değil, tekrar denenecek...');
         } else {
           console.error('Push backend hatası:', await res.text());
           return;
@@ -72,7 +59,7 @@ export async function subscribeUser() {
       } catch (err) {
         console.warn('Push backend fetch hatası:', err);
       }
-      await new Promise((r) => setTimeout(r, 2000)); // 2 saniye bekle
+      await new Promise((r) => setTimeout(r, 2000));
     }
 
     console.error('Push aboneliği backend kaydı başarısız ❌');
