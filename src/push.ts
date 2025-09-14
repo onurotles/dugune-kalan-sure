@@ -21,6 +21,7 @@ export async function subscribeUser() {
   try {
     const registration = await navigator.serviceWorker.register('/service-worker.js');
     await navigator.serviceWorker.ready;
+    console.log('Service Worker kayıtlı ✅');
 
     // 🔹 Mevcut aboneliği kontrol et
     let subscription = await registration.pushManager.getSubscription();
@@ -49,7 +50,7 @@ export async function subscribeUser() {
 
         if (res.status === 201) {
           console.log('Push aboneliği backend’e kaydedildi ✅');
-          return;
+          return subscription;
         } else if (res.status === 503) {
           console.warn('DB hazır değil, tekrar denenecek...');
         } else {
@@ -65,5 +66,33 @@ export async function subscribeUser() {
     console.error('Push aboneliği backend kaydı başarısız ❌');
   } catch (err) {
     console.error('Push aboneliği hatası:', err);
+  }
+}
+
+// 🔹 Test: Lokal veya prod browser’da manuel push göndermek
+export async function sendTestNotification(title = 'Test Notification', body = 'Bu bir testtir') {
+  if (!('serviceWorker' in navigator)) {
+    console.warn('Service Worker desteklenmiyor.');
+    return;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    registration.showNotification(title, { body });
+    console.log('Manuel test bildirimi gösterildi ✅');
+  } catch (err) {
+    console.error('Manuel test bildirimi hatası:', err);
+  }
+}
+
+// 🔹 Mevcut aboneliği almak için helper
+export async function getSubscription() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    return await registration.pushManager.getSubscription();
+  } catch (err) {
+    console.error('Subscription alma hatası:', err);
+    return null;
   }
 }
