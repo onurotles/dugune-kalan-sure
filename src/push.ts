@@ -21,13 +21,11 @@ export async function subscribeUser() {
   try {
     const registration = await navigator.serviceWorker.register('/service-worker.js');
     await navigator.serviceWorker.ready;
-    console.log('Service Worker kayıtlı ✅');
 
-    // 🔹 Mevcut aboneliği kontrol et
+    // Mevcut aboneliği kontrol et
     let subscription = await registration.pushManager.getSubscription();
 
     if (!subscription) {
-      // Yoksa yeni oluştur
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
@@ -39,10 +37,10 @@ export async function subscribeUser() {
 
     const subJson = subscription.toJSON();
 
-    // 🔹 Backend'e kaydet (retry destekli)
+    // Backend'e kaydet
     for (let i = 0; i < 5; i++) {
       try {
-        const res = await fetch('https://countdown-push-server.onrender.com/subscribe', {
+        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/subscribe`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(subJson),
@@ -50,7 +48,7 @@ export async function subscribeUser() {
 
         if (res.status === 201) {
           console.log('Push aboneliği backend’e kaydedildi ✅');
-          return subscription;
+          return;
         } else if (res.status === 503) {
           console.warn('DB hazır değil, tekrar denenecek...');
         } else {
@@ -66,33 +64,5 @@ export async function subscribeUser() {
     console.error('Push aboneliği backend kaydı başarısız ❌');
   } catch (err) {
     console.error('Push aboneliği hatası:', err);
-  }
-}
-
-// 🔹 Test: Lokal veya prod browser’da manuel push göndermek
-export async function sendTestNotification(title = 'Test Notification', body = 'Bu bir testtir') {
-  if (!('serviceWorker' in navigator)) {
-    console.warn('Service Worker desteklenmiyor.');
-    return;
-  }
-
-  try {
-    const registration = await navigator.serviceWorker.ready;
-    registration.showNotification(title, { body });
-    console.log('Manuel test bildirimi gösterildi ✅');
-  } catch (err) {
-    console.error('Manuel test bildirimi hatası:', err);
-  }
-}
-
-// 🔹 Mevcut aboneliği almak için helper
-export async function getSubscription() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
-  try {
-    const registration = await navigator.serviceWorker.ready;
-    return await registration.pushManager.getSubscription();
-  } catch (err) {
-    console.error('Subscription alma hatası:', err);
-    return null;
   }
 }
